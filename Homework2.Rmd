@@ -1,0 +1,203 @@
+---
+title: "HW#2"
+author: "Eden Kim"
+output:
+  pdf_document: default
+---
+# 3.11
+## (a) Test the hypothesis that mixing techniques affect the strength of the cement. Use a = 0.05
+```{r}
+data1 <- data.frame(strength = c(3129, 3000, 2865, 2890,
+                                 3200, 3300, 2975, 3150,
+                                 2800, 2900, 2985, 3050,
+                                 2600, 2700, 2600, 2765), 
+                    technique = c(rep(1,4),rep(2,4),rep(3,4),rep(4,4)))
+model <- aov(strength~factor(technique), data = data1)
+summary(model)
+
+```
+We get F value = 12.73 and p value = 0.000489 < 0.05, so we reject the null hypothesis. We can conclude that there is a statistically significant difference between at least one of the mixing techniques.
+
+
+## (c) Use the Fisher LSD method with a= 0.05 to make comparisons between pairs of means.
+
+```{r}
+#install.packages("DescTools")
+require(DescTools)
+PostHocTest(model, method = "lsd")
+```
+
+
+## (d) Construct a normal probability plot of the residuals. What conclusion would you draw about the validity of the normality assumption?
+
+```{r}
+qqnorm(model$residuals)
+qqline(model$residuals)
+```
+The plot looks approximately normaly and distributed evenly.
+
+
+## (e) Plot the residuals versus the predicted tensile strength. Comment on the plot.
+```{r}
+plot(model$fitted.values,model$residuals)
+```
+From this plot, we can observe that the points are a little clustered around the center right.
+
+
+## (f) Prepare a scatter plot of the results to aid the interpretation of the results of this experiment.
+```{r}
+boxplot(data1$strength~data1$technique)
+```
+The boxplot appear to be different among all the technques, except technique 1 and 3 look quite similar.
+
+
+# 3.12
+## (a). Rework part (c) of Problem 3.11 using Tukey’s test with a = 0.05. Do you get the same conclusions from Tukey’s test that you did from the graphical proce- dure and/or the Fisher LSD method?
+```{r}
+TukeyHSD(x=model, conf.level = 0.95)
+```
+From the Tukey test, the only statistically significant differences are between techniques 4 and 1, 4 and 2, and t and 3. On the other hand, from Fisher's LSD test, the statistically significant differences exist between techniques 2 and 1, 3 and 1, 4 and 1, 4and 2, and 4 and 3. We can observe that Tukey test is more conservative.
+
+## (b) Explain the difference between the Tukey and Fisher procedures.
+Tukey test is more difficult to detect a difference than it is with Fisher's LSD test. It is best to use Tukey when one is working with multiple groups than it is to use Fisher's test.
+
+
+# 3.22
+## (a) Is there a difference in conductivity due to coating type? Use  a = 0.05.
+```{r}
+data2 <- data.frame(conductivity = c(143, 141, 150, 146, 
+                            152, 149, 137, 143, 
+                            134, 136, 132, 127, 
+                            129, 127, 132, 129),
+           type = c(rep(1,4), rep(2,4), rep(3,4), rep(4,4)))
+data2
+model2 <- aov(conductivity ~ factor(type), data=data2)
+summary(model2)
+```
+The model has a F value = 14.3 and a p value = 0.000288 < 0.05, so we reject the null hypothesis. We can conclude that there exists a statistically significant difference between the 4 different types of coating for color picture tubes.
+
+
+## (b) Estimate the overall mean and the treatment effects.
+```{r}
+mu <- 2207/16
+(t1 <- 145-mu)
+(t2 <- 145.25-mu)
+(t3 <- 132.25-mu)
+(t4 <- 129.25-mu)
+```
+
+
+## (c) Compute a 95 percent confidence interval estimate of the mean of coating type 4. Compute a 99 percent confidence interval estimate of the mean difference between coating types 1 and 4.
+```{r}
+require(Hmisc)
+mse <- 19.6875
+mean(data2$conductivity[data2$type==4])-qt(0.025,12)*sqrt(mse/4)
+mean(data2$conductivity[data2$type==4])+qt(0.025,12)*sqrt(mse/4)
+
+diff <- mean(data2$conductivity[data2$type==1])-mean(data2$conductivity[data2$type==4])
+diff-qt(0.005,12)*sqrt(2*mse/4)
+diff+qt(0.005,12)*sqrt(2*mse/4)
+```
+
+## (d) Test all pairs of means using the Fisher LSD method with a = 0.05.
+```{r}
+PostHocTest(model2, method = "lsd")
+```
+
+## (f) Assuming that coating type 4 is currently in use, what are your recommendations to the manufacturer? We wish to minimize conductivity.
+The Fisher LSD test shows that pairs means of the pairs T1 &T2 and T3 & T4 are not significantly different in 95% confidence level. All other pairs are significantly different.
+
+# 3.23 
+```{r}
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+plot(model$fitted.values, model$residuals)
+```
+The data is approximately normal but the variance between the difference types seems large. I recommended conducting the experiment again with a higher sample size or tuning the model to account for a low sample size.
+
+
+# 3.26
+## (a) Test the hypothesis that the three circuit types have the same response time. Use a = 0.01.
+```{r}
+data3 <- data.frame(time = c(9, 12, 10, 8, 15, 20, 21, 23, 17 ,30, 6, 5, 8, 16, 7),
+           type = c(rep(1,5),rep(2,5),rep(3,5)))
+model3 <- aov(time~factor(type), data=data3)
+summary(model3)
+```
+We get p value = 0.000402 < 0.01 and f value = 16.08, we reject the null hypothesis. We can conclude that there exists a statistically significant difference between the three different types of circuits used in an automatic valve shutoff mechanism. 
+
+## (b) Use Tukey’s test to compare pairs of treatment means. Use a = 0.01.
+```{r}
+TukeyHSD(x= model3, conf.level=0.99)
+```
+The circuit type 3 compared to type 1 have p value = 0.6367043 and does not appear to be statistically significant, but all the other pairs are appear to be significant
+
+## (e) If you were the design engineer and you wished to minimize the response time, which circuit type would you select?
+I would select circuit type 2 and type 3.
+
+## (f) Analyze the residuals from this experiment. Are the basic analysis of variance assumptions satisfied?
+```{r}
+qqnorm(model3$residuals)
+qqline(model3$residuals)
+
+plot(model3$fitted.values, model3$residuals)
+```
+The assumptions of variance and normality are being violated. The QQ plot is not entirely normal (there exists a couple of outliers). The data appears to be clused on the left and you can clearly see there are outliers on points (8,8) and (22, 8). 
+
+
+# 3.32
+## (a)
+```{r}
+data4 <- data.frame(time = c(110,157,194,178, 1,2,4,18, 880,1256,5276,4355, 495,7040,5307,10050, 7,5,29,2), material = c(rep(1,4),rep(2,4),rep(3,4),rep(4,4),rep(5,4)))
+model4 <- aov(time~factor(material), data=data4)
+summary(model4)
+```
+We get the p value = 0.00379 < 0.01, so we reject the null hypothesis. We can conclude that there exists a statistcally significant difference between the 5 types of material.
+
+## (b)
+```{r}
+qqnorm(model4$residuals)
+qqline(model4$residuals)
+
+plot(model4$fitted.values, model4$residuals)
+```
+The normality plot is not normal and the variance is very large. This indicates that our sample size may be too big, there may be significantly many outliers in our data, or a transformation of our data is needed.
+
+
+## (c) 
+```{r}
+model4_1 <- aov(log(data4$time)~data4$material)
+summary(model4_1)
+
+qqnorm(model4_1$residuals)
+qqline(model4_1$residuals)
+
+plot(model4_1$fitted.values, model4_1$residuals)
+```
+The plots look a lot more evenly distributed after performing a log on the failure times! Variance looks a lot better and is no longer skewed to the left.
+
+
+# 3.49
+```{r}
+x <- 10^2/2/3/16.9
+5*x
+6*x
+7*x
+```
+Notice that we have used an estimate of the variance obtained from the present experiment. This indicates that we probably didn’t use a large enough sample. 
+
+
+# 3.52
+```{r}
+mu1 <- 50
+mu2 <- 60
+mu3 <- 50
+mu4 <- 60
+mu <- sum(mu1,mu2,mu3,mu4) / 4
+sqrt(4)
+sqrt(5)
+```
+5 observations should be taken from each population
+
+

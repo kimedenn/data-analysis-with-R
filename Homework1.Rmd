@@ -1,0 +1,85 @@
+---
+title: "HW#1"
+author: "Eden Kim"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+# 1.
+## a. What kind of approach do you use to design the experiment, best guess approach, one factor a time approach, or factorial design approach?
+- In our experiment design, we used the factorial design approach. We said to first test out the inital recipe that we found online as the original method. Then proceed the experiment by increasing and decreasing the amount of ingredients used in the recipe. 
+
+## b. What factors do you consider to affect the outcome?
+- The factors that can have affect on the size is, of course, the amount of ingredients. For example, if more egg whites are used, the bigger the size of the meringues will be.
+
+## c. How will you measure the outcome variable?
+- I will measure the sizes of the meringue by measuring the diameter of the bottom of the each meringues. I would conclude that as the diameter increases, the size increases.
+
+## d. Which principle of experiment is used in your design? How do you implement the principles in your experiment?
+- I notice that our group only used randomization in our experiment. We randomly chose different treatment to compare the sizes. We randomly assigned different amount of ingredients to be used in each trials i.e. recipe.
+
+## e. Update the design of experiment based on what you have learned from Chapter 1. 
+- Like I answered in part d, I would use the principles of experiment. In order to improve our design of experiment, we need to use all 3 of the principles of experiment. We will randomize and replicate the steps of the experiment by randomly assigning the amount of the ingredients and replicating the random assignment multiple times. We can used the blocking technique by possibly keeping steps of the recipe throughout the experiment. For example, we would keep the temperature and the order of adding each ingredients. 
+
+
+# -- 1) state the null and alternative hypothesis using appropriate symbols, and 2) report the test statistics
+
+# 2. Problem 2.26
+## (a) State the hypotheses that should be tested in this experiment.
+Null Hypothesis $H_{0}: \mu_{1} = \mu_{2}$
+Alternative hypothesis $H_{1}: \mu_{1} \neq \mu_{2}$
+
+## (b) Test these hypotheses using a = 0.05. What are your conclusions?
+```{r}
+machine1 <- c(16.03, 16.04, 16.05, 16.05, 16.02, 16.01, 15.96, 15.98, 16.02, 15.99) 
+machine2 <- c(16.02, 15.97, 15.96, 16.01, 15.99, 16.03, 16.04, 16.02, 16.01, 16.00)
+t.test(machine1, machine2, var.equal=FALSE, alternative="two.sided", mu=0)
+```
+Here we get $t_0 = 0.7984 < t_{0.025,18} = 2.101$, so we fail to reject the null hypothesis. This test suggests us to conclude that the differences in volume of the two machines may be due to random chances.
+
+## (c) Find the P-value for this test.
+From above t test, we found that the p-value is 0.435.
+
+## (d) Find a 95 percent confidence interval on the difference in mean fill volume for the two machines.
+From (b), we get that the confidence interval on thedifference in mean fill volume between the two machines is (-0.01635123,  0.03635123).
+
+
+# 3. Problem 2.28
+## (a) Test the hypothesis that the two variances are equal. Use a = 0.05.
+Null Hypothesis $H_{0}: \sigma_{1} = \sigma_{2}$
+Alternative hypothesis $H_{1}: \sigma_{1} \neq \sigma_{2}$
+```{r}
+type1 <- c(65, 81, 57, 66, 82, 82, 67, 59, 75, 70) 
+type2 <- c(64, 71, 83, 59, 65, 56, 69, 74, 82, 79)
+var.test(type1, type2, alternative="two.sided")
+```
+## (b) Using the results of (a), test the hypothesis that the mean burning times are equal. Use a = 0.05. What is the P-value for this test?
+We get p-value to be $0.9744 > 0.05$ so we fail to reject the null hypothesis. We can conclude that the ration of variances not equal to 1 may be due to random chances.
+
+## (c) Discuss the role of the normality assumption in this problem. Check the assumption of normality for both types of flares.
+```{r}
+par(mfrow=c(1,2))
+qqnorm(type1)
+qqline(type1)
+qqnorm(type2)
+qqline(type2)
+```
+The normality assumption is more important for the test on the equality of the two variances. It is important that the variability of the buring times needs to small so that it is close to the normal net time of the burning. The qqnorm plots indicate that burning time for both types are normally distributed.
+
+
+# 4. Problem 2.34 
+## (a) Is there a significant difference between the means of the population of measurements from which the two samples were selected? Use a = 0.05.
+```{r}
+inspector <- c(1:12)
+caliper1 <- c(0.265, 0.265, 0.266, 0.267, 0.267, 0.265, 0.267, 0.267, 0.265, 0.268, 0.268, 0.265)
+caliper2 <- c(0.264, 0.265, 0.264, 0.266, 0.267, 0.268, 0.264, 0.265, 0.265, 0.267, 0.268, 0.269)
+df <- data.frame(inspector, caliper1, caliper2)
+head(df)
+t.test(df$caliper1,df$caliper2, var.equal=TRUE)
+```
+
+## (b) Find the P-value for the test in part (a).
+The p-value is $0.6893 > 0.05$, so we reject the null hypothesis that the difference in mean diameter measurements for the two types of calipers may be due to a random chance.
+
+## (c) Construct a 95 percent confidence interval on the difference in mean diameter measurements for the two types of calipers.
+The confidence interval on the difference in mean diameter measurements for the two types of calipers is (-0.0010295568, 0.001529568).

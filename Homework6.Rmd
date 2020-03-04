@@ -1,0 +1,230 @@
+---
+title: "Homework 5"
+output:
+  pdf_document: default
+  html_document: default
+---
+# 1. Problem 7.2
+```{r}
+response <- c(18.2,18.9,12.9,14.4,27.2,24,22.4,22.5,15.9,14.5,15.1,14.2,41,43.9,36.3,39.9)
+A <- rep(c(rep(-1,4),rep(1,4)),2)
+B <- c(rep(-1,8),rep(1,8))
+block <- A*B
+response[block==1] <- response[block==1]-20
+model1<-aov(response~factor(A)*factor(B)+factor(block))
+summary(model1)
+```
+
+# 2. Problem 7.7
+```{r}
+A <- rep(c(-1,1), 16)
+B <- rep(c(-1,-1,1,1), 8)
+C <- rep(c(rep(-1,4), rep(1,4)),4)
+D <- rep(c(-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,1,1,1,1), 2)
+E <- c(rep(-1,16), rep(1,16))
+response <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
+
+block <- A*B*C*D
+model2<-aov(response~factor(A)*factor(B)+factor(C)+factor(block))
+summary(model2)
+```
+
+# 3. Problem 7.31
+acde will be in the same block as the even number of levels, so it will be in the same block as be
+
+# 4. Problem 8.11
+## (a) Verify that the design generators used were I=ACE and I=BDE.
+
+\    |A|B|C|D|E
+-----|-|-|-|-|-
+e    |-|-|-|-|+
+ad   |+|-|-|+|-
+bde  |-|+|-|+|+
+ab   |+|+|-|-|-
+cd   |-|-|+|+|-
+ace  |+|-|+|-|+
+bc   |-|+|+|-|-
+abcde|+|+|+|+|+
+
+from the above table, we see that E = AC and E = BD. The design generators are therefore I = ACE and I = BDE.
+
+## (b) Write down the complete defining relation and the aliases for this design.
+* defining relation:
+    + I = ACE = BDE = ABCD
+
+* aliases:
+    + A = CE = ABDE = BCD
+    + B = ABCE = DE = ACD
+    + AB = BCE = ADE= CD
+    + C = AE = BCDE = ABD
+    + AC = E = ABCDE = BD
+    + BC = ABE = CDE = AD
+    + ABC = BE = ACDE = D
+
+
+## (c) Estimate the main effects.
+```{r}
+A <- rep(c(-1,1), 4)
+B <- rep(c(-1,-1,1,1), 2)
+C <- c(rep(-1,4), rep(1, 4))
+E <- A*C
+D <- B*E
+yield <- c(23.2, 16.9, 16.8, 15.5, 23.8, 23.4, 16.2, 18.1)
+
+lm4 <- lm(yield~A*B*C*D*E)
+
+effect <- na.omit(2*coef(lm4)[-1])
+effect
+```
+
+
+## (d) Prepare an analysis of variance table. Verify that the AB and AD interactions are available to use as error.
+```{r}
+model4 <- aov(yield~factor(A)+factor(B)+factor(C)+factor(D)+factor(E))
+summary(model4)
+```
+
+
+## (e) Plot the residuals versus the fitted values. Also construct a normal probability plot of the residuals. Comment on the results.
+```{r}
+qqnorm(model4$residuals)
+qqline(model4$residuals)
+plot(model4$fitted.values,model4$residuals)
+```
+Assumption of normality is satisfied
+
+# 5. Problem 8.28
+## (a) What type of design did the experimenters use?
+There are total 16 runs, the design used is $2^{6-2}_{IV}$
+
+## (b) What are the alias relationships in this design?
+defining relation: I = ABCE = ACDF = BDEF
+aliases:
+- A = BCE = CDF = ABDEF
+- B = ACE = ABCF = DEF
+- C = ABF = ADF = BCDEF
+- D = ABCDE = ACF = BEF
+- E = ABC = ACDEF = BDF
+- F = ABCEF = ACD = BDE
+- AB = CE = BCDF = ADEF
+- AC = BE = DF = ABCDEF
+- AD = BCDE = CF = ABEF
+- AE = BC = CDEF = ABDF
+- AF = BCEF = CD = ABDE
+- BD = ACDE = ABCF = EF
+- BF = ACEF = ABCD = DE
+
+
+## (c) Do any of the process variables affect average camber?
+```{r}
+A <- rep(c(-1,1), 8)
+B <- rep(c(-1, -1, 1, 1), 4)
+C <- rep(c(rep(-1, 4),rep(1,4)), 2)
+D <- c(rep(-1,8), rep(1,8))
+E <- A*B*C
+F <- A*C*D
+avg <- c(157.25,48,44,55.75,55.75,230,97.25,225,50.25,85.25,31.5,160,113.75,92.75,150.75,115)
+
+lm5 <- lm(avg~A*B*C*D*E*F)
+
+effect5 <- na.omit(2*coef(lm5)[-1]) 
+effect5
+
+qqnorm(effect5)
+text(qqnorm(effect5)$x,qqnorm(effect5)$y, names(effect5))
+qqline(effect5)
+
+model5 <- aov(avg~factor(A)+factor(C)+factor(E)+factor(F))
+summary(model5)
+```
+
+
+## (d) Do any of the process variables affect the variability in camber measurements?
+```{r}
+sd <- c(24.418, 20.976, 4.083, 25.025, 22.410, 63.639, 16.029, 39.42, 26.725, 50.341, 7.681, 20.083, 31.12, 29.51, 6.75, 17.45)
+lm5 <- lm(sd~A*B*C*D*E*F)
+
+effect5 <- na.omit(2*coef(lm5)[-1]) 
+effect5
+
+qqnorm(effect5)
+text(qqnorm(effect5)$x,qqnorm(effect5)$y, names(effect5))
+qqline(effect5)
+
+model5 <- aov(avg~factor(A)+factor(C)+factor(E)+factor(F))
+summary(model5)
+```
+
+
+## (e) If it is important to reduce camber as much as possible, what recommendations would you make?
+```{r warning=FALSE}
+library(gplots)
+par(mfrow=c(1,2))
+plotmeans(avg~A,xlab="Lamination Temperature",ylab="Average", p=0, main="Main effect Plot of A")
+plotmeans(avg~B,xlab="Lamination Time",ylab="Average", p=0, main="Main effect Plot of B")
+plotmeans(avg~E,xlab="Firing Cycle Time",ylab="Average", p=0, main="Main effect Plot of D")
+plotmeans(avg~F,xlab="Firing Dew Point",ylab="Average", p=0, main="Main effect Plot of D")
+
+interaction.plot(A,F,sd, main="AF interaction plot")
+plotmeans(sd~B,xlab="Lamination Time",ylab="Standard Deviation", p=0, main="Main effect Plot of B")
+```
+I would recommand to run A and C at the low level and E and F at the high level. B at the low level enables a lower the deviation without affecting the average camber.
+
+
+# 6. Problem 8.29
+## (a) 
+We have 6 factors A = Final spin speed, B = Acceleration rate, C = Volume of resist applied, D = Time of spin, E = Resist batch variation, F = Exhaust pressure with 2 levels for each factors, so we get I=ABCDEF. This is a resolution VI design. The main effects are aliased with five-factor interactions and two-factor interactions are aliased with four-factor interactions.
+
+## (b) What factors appear to affect average resist thickness?
+```{r}
+A <- c(1,1,-1,-1,-1,1,-1,1,1,-1,-1,-1,1,-1,1,1,-1,-1,1,-1,1,-1,1,-1,1,-1,-1,1,1,1,1,-1)
+B <- c(1,-1,-1,1,-1,-1,-1,1,-1,-1,1,-1,-1,-1,1,1,1,-1,1,1,-1,1,-1,1,-1,1,-1,1,-1,1,1,1)
+C <- c(1,-1,-1,1,1,-1,-1,1,1,1,1,-1,-1,-1,1,-1,1,1,-1,-1,1,-1,1,-1,1,-1,1,-1,-1,-1,1,1)
+D <- c(1,1,-1,1,1,-1,1,-1,-1,-1,-1,1,-1,-1,1,1,1,-1,1,1,-1,-1,1,1,1,-1,1,-1,1,-1,-1,-1)
+E <- c(-1,-1,-1,1,-1,1,-1,1,-1,-1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,1,-1,1,1,-1,1,1,-1,-1)
+F <- c(-1,-1,-1,-1,-1,-1,1,-1,-1,1,1,-1,1,1,1,1,1,-1,-1,-1,1,1,-1,1,1,-1,1,-1,1,1,1,-1)
+avg <- c(4525.7, 4446, 4464.7, 4317.3, 4297, 4485.7, 4493.3, 4542.3, 4625.7, 4656, 4478.7, 4223.7, 4626.7, 4467, 4262, 4515.7, 4535, 4497.7, 4300.3, 4530.3, 4451, 4664.7, 4235, 4220.3, 4382.7, 4521.7, 4198.7, 4677.7, 4196.7, 4474.7, 4667.7, 4690.7)
+range <- c(16,36,38,20,18,25,20,9,30,25,1,16,22,25,45,44,37,9,13,33,24,38,14,20,15,22,58,29,33,33,32,35)
+
+lm6 <- lm(avg~A*B*C*D*E*F)
+
+effect6 <- na.omit(2*coef(lm6)[-1]) 
+effect6
+
+qqnorm(effect6)
+text(qqnorm(effect6)$x,qqnorm(effect6)$y, names(effect6))
+qqline(effect6)
+
+model6 <- aov(avg~factor(B)+factor(D)+factor(E))
+summary(model6)
+```
+Factors B, D, and E appear to affect the average resist thickness
+
+
+## (c) Because the volume of resist applied has little effect on average thickness, does this have any important practical implications for the process engineers?
+Yes, less material could be used.
+
+## (d) Project this design into a smaller design involving only the significant factors. Graphically display the results. Does this aid in interpretation?
+```{r warning=FALSE}
+library(FrF2)
+cubePlot(avg, B, D, E)
+```
+
+## (e) Use the range of resist thickness as a response variable. Is there any indication that any of these factors affect the variability in resist thickness?
+```{r}
+lm6 <- lm(range~A*B*C*D*E*F)
+
+effect6 <- na.omit(2*coef(lm6)[-1]) 
+effect6
+
+qqnorm(effect6)
+text(qqnorm(effect6)$x,qqnorm(effect6)$y, names(effect6))
+qqline(effect6)
+
+model6 <- aov(range~factor(A)+factor(B)+factor(E)+factor(F))
+summary(model6)
+```
+The normality assumption is statisfied. The model for thickness range is not significant. Therefore we can say that the variability in the coating thickness does not have an important impact on downstream manufacturing step.
+
+## (f) Where would you recommend that the engineers run the process?
+By looking at the results from the average thickness, the engineers could use acceleration rate, time of spin, and resist batch variation to achieve desirable process. 

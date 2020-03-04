@@ -1,0 +1,248 @@
+---
+title: "Homework 5"
+author: "Eden Kim "
+output:
+  pdf_document: default
+  html_document: default
+---
+# 1. Problem 6.9
+## (a) Analyze the data from this experiment.
+```{r}
+vibration <- c(18.2,18.9,12.9,14.4,27.2,24,22.4,22.5,15.9,14.5,15.1,14.2,41,43.9,36.3,39.9)
+bitsize <- rep(c(rep(-1,4),rep(1,4)),2)
+cutspd <- c(rep(-1,8),rep(1,8))
+
+m1 <- aov(vibration~factor(bitsize)*factor(cutspd))
+summary(m1)
+```
+All of the p values are significant and this results suggest that the effects of variations of bit sizes, cutting speed, and the interaction of bitsizes and cutting speed has a possible significant effect on the vibration.
+
+## (b) Construct a normal probability plot of the residuals, and plot the residuals versus the predicted vibration level. Interpret these plots.
+```{r}
+par(mfrow=c(1,2))
+qqnorm(m1$residuals)
+qqline(m1$residuals)
+plot(m1$fitted.values,m1$residuals)
+```
+Normaluty assumptions are satisfied.
+
+## (c) Draw the AB interaction plot. Interpret this plot. What levels of bit size and speed would you recommend for routine operation?
+```{r}
+#install.packages("phia")
+library(phia)
+mip1<-interactionMeans(m1)
+plot(mip1)
+```
+From the interaction plots, we can observe that the vibration is minimized with smaller bit size. The cutting speed does not have great effect on the vibration once the bit size is small.  
+
+
+# 2. Problem 6.16 : skip (e)
+## (a) Estimate the factor effects.
+```{r}
+thickness <- c(14.037,16.165,13.972,13.907,13.88,13.86,14.032,13.914,14.821,14.757,14.843,14.878,14.888,14.921,14.415,14.932)
+deptime <- c(rep(10,8), rep(15,8))
+flowrate <- c(rep(c(rep(55,4),rep(59,4)),2))
+
+lm2 <- lm(thickness~deptime*flowrate)
+effect <- 2*(coef(lm2)[-1])
+effect
+```
+
+## (b) Conduct an analysis of variance. Which factors are important?
+```{r}
+m2 <- aov(thickness~factor(deptime)*factor(flowrate))
+summary(m2)
+```
+All factors appear to be insignificant to the thickness of the epitaxial layer. The deposition time is marginally significant with the p value = 0.0602.
+
+## (c) Write down a regression equation that could be used to predict epitaxial layer thickness over the region of arsenic flow rate and deposition time used in this experiment.
+$$thickness = 37.62656 - 0.43119 * Flow Rate -1.48735 * Dep Time + 0.028150 * Flow Rate * Dep Time$$
+
+## (d) Analyze the residuals. Are there any residuals that should cause concern?
+```{r}
+par(mfrow=c(1,2))
+qqnorm(m2$residuals)
+qqline(m2$residuals)
+plot(m2$fitted.values,m2$residuals)
+```
+There is one outlier that does not fit into the above plots. 
+
+# 3. Problem 6.28
+## (a) Analyze the data from this experiment. Which factors significantly affect the customer response rate?
+```{r}
+orders <- c(50,54,44,42,46,48,42,43,49,46,48,45,47,48,56,54)
+price <- c(rep(19.95,8),rep(24.95,8))
+type <- c(rep(c(rep("BW",4),rep("Color",4)),2))
+class <- c(rep(c(rep("3rd",2),rep("1st",2)),4))
+
+m3 <- aov(orders~factor(price)*factor(type)*factor(class))
+summary(m3)
+```
+The interactions of (price and type), (price and class), (type and class), and the factor price are significantly affect the customer response rate.
+
+## (b) Analyze the residuals from this experiment. Are there any indications of model inadequacy?
+```{r}
+par(mfrow=c(1,2))
+qqnorm(m3$residuals)
+qqline(m3$residuals)
+plot(m3$fitted.values,m3$residuals)
+qqnorm(effect)
+text(qqnorm(effect)$x,qqnorm(effect)$y, names(effect))
+qqline(effect)
+```
+There is not indication of model inadequacy
+
+## (c) What would you recommend to the company?
+```{r}
+mip3<-interactionMeans(m3)
+plot(mip3)
+```
+Based on the interaction plots, the interaction of black-and-white, 3rd class, and with price of 19.95 gives the highest interaction. To get highest order, I would recommand to sell black and white brochures at 19.95 dollars. To achieve the next highest order, I would recommand colored brochures 1st class at 24.95 dollars.
+
+# 4. Problem 6.30
+## (a) Construct a normal probability plot of the effect estimates. Which effects appear to be large?
+```{r}
+A <- rep(c(-1,1), 16)
+B <- rep(c(-1,-1,1,1), 8)
+C <- rep(c(rep(-1,4), rep(1,4)),4)
+D <- rep(c(-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,1,1,1,1), 2)
+E <- c(rep(-1,16), rep(1,16))
+response <- c(7,9,34,55,16,20,40,60,8,10,32,50,18,21,44,61,8,12,35,52,15,22,45,65,6,10,30,53,15,20,41,63)
+
+lm4 <- lm(response~A*B*C*D*E) 
+effect <- 2*(coef(lm4)[-1]) 
+effect
+
+qqnorm(effect)
+text(qqnorm(effect)$x, qqnorm(effect)$y, names(effect)) 
+qqline(effect)
+```
+From the normal probability plot of effects, the factors A(aperture setting), B(exposure time), C(development time), and AB interaction appear to be large.
+
+## (b) Conduct an analysis of variance to confirm your findings for part (a).
+```{r}
+m4 <- aov(response~factor(A)*factor(B)*factor(C))
+summary(m4)
+```
+
+## (c) Write down the regression model relating yield to the significant process variables.
+```{r}
+lm4 <- lm(response~A*B*C) 
+summary(lm4)
+```
+
+$$Yield =12.21875+1.04688 * Exposure Time+0.64583 * Develop Time$$
+
+## (d) Plot the residuals on normal probability paper. Is the plot satisfactory?
+```{r}
+par(mfrow=c(1,2))
+qqnorm(m4$residuals)
+qqline(m4$residuals) 
+plot(m4$fitted.values, m4$residuals)
+```
+Nomality assumptions are satisfied.
+
+## (e) Plot the residuals versus the predicted yields and versus each of the five factors. Comment on the plots.
+```{r}
+par(mfrow=c(1,2))
+plot(response, m4$residuals)
+plot(A, m4$residuals)
+plot(B, m4$residuals)
+plot(C, m4$residuals)
+plot(D, m4$residuals)
+plot(E, m4$residuals)
+```
+The plot of residual vs B(exposure time) is slightly funnel shaped and there may be non-constant variance. The other plots looks pretty consistant.
+
+## (f) Interpret any significant interactions.
+```{r}
+interaction.plot(A, B, response)
+```
+From the interaction plot, we see that at low level of B, there is no large effect with A. But at high level of B, there is greater interaction effects with A. 
+
+## (g) What are your recommendations regarding process operating conditions?
+```{r warning=FALSE}
+#install.packages("gplots")
+library(gplots)
+par(mfrow=c(1,3))
+plotmeans(response~A, xlab='Factor A', ylab='response', p=0, main='Main Effect of A', barcol = "blue")
+plotmeans(response~B, xlab='Factor B', ylab='response', p=0, main='Main Effect of B', barcol = "black")
+plotmeans(response~C, xlab='Factor C', ylab='response', p=0, main='Main Effect of C', barcol = "black")
+```
+
+From the main effect plots, all factors a,b, and c are recommanded to run at the high level in order to increase the yield to its highest.
+
+## (h) Project the 2^5 design in this problem into a 2^k design in the important factors. Sketch the design and show the average and range of yields at each run. Does this sketch aid in interpreting the results of this experiment?
+```{r}
+#install.packages("FrF2")
+library(FrF2)
+cubePlot(response, A, B, C)
+```
+This plot makes clear to interpret the data. From this plot, we can see that the ab interaction and bc intercation are strong, and the effect of c is generally large.
+
+
+# 5. Problem 6.40
+## (a) Estimate the factor effects. Plot the effect estimates on a normal probability plot and select a tentative model.
+```{r}
+A <- rep(c(-1,1), 8)
+B <- rep(c(-1,-1,1,1), 4)
+C <- rep(c(rep(-1,4), rep(1,4)), 2)
+D <- c(rep(-1,8), rep(1,8))
+resistivity <- c(1.92,11.28,1.09,5.75,2.13,9.53,1.03,5.35,1.60,11.73,1.16,4.68,2.16,9.11,1.07,5.30)
+ 
+lm5 <- lm(resistivity~A*B*C*D) 
+effect <- 2*(coef(lm5)[-1]) 
+effect
+
+qqnorm(effect)
+text(qqnorm(effect)$x, qqnorm(effect)$y, names(effect))
+qqline(effect)
+```
+
+## (b) Fit the model identified in part (a) and analyze the residuals. Is there any indication of model inadequacy?
+```{r}
+m5 <- aov(resistivity~factor(A)*factor(B))
+summary(m5)
+
+# normality check
+res <- m5$residuals
+par(mfrow=c(1,2))
+qqnorm(res)
+qqline(res) 
+qqplot(m5$fitted.values, res)
+
+# residual vs significant factors
+par(mfrow=c(1,3))
+plot(resistivity, res)
+plot(A, res)
+plot(B, res)
+```
+The normality assumption did not satisfy and indicates that the model is inadequate. Also, The plots of residual vs resistivity, residual vs A, and the residual vs B are funnel shaped which we conclude that the variance is non-constant.
+
+## (c) Repeat the analysis from parts (a) and (b) using ln(y) as the response variable. Is there an indication that the transformation has been useful?
+```{r}
+lm6 <- lm(log(resistivity)~A*B) 
+summary(lm6)
+effect <- 2*(coef(lm6)[-1]) 
+effect
+
+qqnorm(effect)
+text(qqnorm(effect)$x, qqnorm(effect)$y, names(effect))
+qqline(effect)
+
+m6 <- aov(log(resistivity)~factor(A)*factor(B))
+summary(m6)
+
+par(mfrow=c(1,2))
+qqnorm(m6$residuals)
+qqline(m6$residuals) 
+qqplot(m6$fitted.values, m6$residuals)
+```
+The normality assumption is satisfied and the model looks like it is adequate. With f value = 0.88 and p value = 0.367, this indicates that the transformation of ab interaction is not significant. 
+
+## (d) Fit a model in terms of the coded variables that can be used to predict the resistivity.
+```{r}
+lm7 <- lm(log(resistivity)~A+B)
+summary(lm7)
+```
+$$ln(resistivity) = 1.1854 + 0.8129*A - 0.3143*B$$

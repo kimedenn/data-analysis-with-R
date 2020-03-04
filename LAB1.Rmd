@@ -1,0 +1,80 @@
+---
+title: "LAB"
+output: html_document
+---
+1. 
+(a) 400 observations
+(b) Gender, APOL, RS174548, RS4775401, HTN, CHD
+```{r}
+library(readr)
+cholesterol <- read_csv("Downloads/stats20/cholesterol.csv")
+dim(cholesterol)
+summary(cholesterol)
+```
+2.
+```{r}
+mean(cholesterol$TG)
+median(cholesterol$TG)
+sd(cholesterol$TG)
+IQR(cholesterol$TG)
+```
+3. Based on the qqplot, the distribution of Serum triglycerides is approximately normal, since the line has a positive slope.
+```{r}
+library(MASS)
+library(dplyr)
+TGgraph <- hist(cholesterol$TG) %>% rnorm()
+qqnorm(TGgraph)
+qqline(TGgraph)
+```
+4. 
+```{r}
+boxplot(cholesterol$TG ~ cholesterol$GENDER, horizontal = TRUE, 
+        col = c("blue", "green"), ylab = "Gender", xlab = "Serum triglycerides",
+        main = "boxplot of gender and serum triglycerides")
+```
+5. 
+```{r}
+for(i in 1:length(cholesterol)){
+  cholesterol$BMI_CAT[i] <- ifelse(cholesterol$BMI[i] >= 18 & cholesterol$BMI[i] < 25, "normal", 
+                            ifelse(cholesterol$BMI[i] >= 25 & cholesterol$BMI[i] < 30, "overweight",
+                            ifelse(cholesterol$BMI[i] > 30, "obese")))
+}
+```
+6. 45.25% of the patients are overweight or obese.
+```{r}
+for(i in 1:length(cholesterol)){
+  cholesterol$BMI_BIN[i] <- ifelse(cholesterol$BMI[i] >= 25, 1, 
+                            ifelse(cholesterol$BMI_BIN[i] < 25, 0))
+}
+
+cholesterol$BMI_BIN %>% table() %>% prop.table()
+```
+7. 
+```{r}
+summary(cholesterol$TG[cholesterol$BMI_BIN==0])
+summary(cholesterol$TG[cholesterol$BMI_BIN==1])
+```
+8. With BMI greater than 25 kg/m2, the average triglycerides tends to be higher than with BMI less than 25kg/m2. 
+```{r}
+boxplot(cholesterol$TG ~ cholesterol$BMI_BIN, horizontal = TRUE, col = c("yellow", "red"),
+        xlab = "Triglycerides", ylab = "BMI")
+```
+9.
+```{r}
+t.test(cholesterol$TG ~ cholesterol$BMI_BIN)
+```
+10. The scatterplot shows that the serum triglycerides and BMI have a positive correlation, whereas the the boxplot easily demonstrates the average values of the two data set. 
+```{r}
+plot(cholesterol$TG ~ cholesterol$BMI)
+```
+11. The slope of serum trigylcerides and BMI is 15.44. That is, every 1 mg/dl increase in triglycerides gives 15.44kg/m2 increase in BMI
+
+TG = 15.44(BMI) - 208.5
+```{r}
+reg <- lm(cholesterol$TG ~ cholesterol$BMI)
+reg
+```
+12.
+```{r}
+plot(reg)
+```
