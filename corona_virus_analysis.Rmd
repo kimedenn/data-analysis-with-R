@@ -1,0 +1,193 @@
+---
+title: "Corona Virus Analysis and Forecast using R"
+author: "Eden Kim"
+date: "3/4/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+1. Load packages
+
+```{r, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(maps)
+library(lubridate)
+```
+
+2. Read the data
+
+```{r}
+covid <- read.csv("covid_19_clean_complete.csv")
+dim(covid)
+head(covid)
+```
+
+- The data set is divided into the provinces and states for China, US. The most recent entry gives the latest case numbers. I would like to know how many cases are confirmed positive per country. First, I will extract data from Country.Region, Province.State and Confirmed. Then get the latest value for the province/state and then sum up the cases from the province/state to get the total confirmed cases for the country.
+
+3. Total number of Confirmed cases per contry
+
+```{r}
+# get total number of cases per country
+confirmed_per_country <- covid %>% 
+  select(Country.Region, Province.State, Confirmed) %>% 
+  group_by(Country.Region, Province.State) %>% 
+  summarise(Total.Confirmed = max(Confirmed)) %>%
+  group_by(Country.Region) %>%
+  summarise(Total.Confirmed = sum(Total.Confirmed)) %>%
+  arrange(desc(Total.Confirmed)) 
+confirmed_per_country
+
+# bar graph comparing the top 10 countries
+confirmed_per_country %>% 
+  top_n(10) %>%    # select top 10
+  ggplot(aes(x = reorder(Country.Region,-Total.Confirmed), y = Total.Confirmed, fill = Country.Region)) +
+  geom_bar(stat = "identity") +
+  labs(y = "Total Confirmed Case", x = "Country/Region") +
+  theme(legend.position="none", axis.text.x = element_text(angle=90))
+
+# world map of the spread
+countries <- covid %>% 
+  select(Country.Region, Lat, Long, Confirmed) %>%
+  group_by(Country.Region)
+countries
+worldmap = map_data("world")
+
+ggplot() +
+  geom_polygon(data = worldmap, aes(x = long, y = lat, group = group), fill="grey", alpha=0.4) +
+  geom_point(data = countries, aes(x = Long, y = Lat, color = Confirmed, size=Confirmed), alpha=0.2) +
+  scale_size_continuous(range=c(.2,20)) +
+  ggtitle("Corona Virus Spread Map") +
+  theme_void() +
+  theme(legend.position="none")
+```
+
+4. The spread throuout the Provinces in China
+
+```{r}
+# get confirmed cases per procince
+per_ch_province <- covid %>% 
+  filter(Country.Region == "Mainland China") %>%
+  select(Province.State, Confirmed) %>%
+  group_by(Province.State) %>%
+  summarise(Total.Confirmed = max(Confirmed)) %>% 
+  arrange(desc(Total.Confirmed))
+per_ch_province
+
+# bar graph spread per province
+per_ch_province %>% 
+  #top_n(10) %>%    # select top 10
+  ggplot(aes(x = reorder(Province.State,-Total.Confirmed), y = Total.Confirmed, fill = Province.State)) +
+  geom_bar(stat = "identity") +
+  labs(y = "Total Confirmed Case", x = "Province") +
+  theme(legend.position="none", axis.text.x = element_text(angle=90))
+```
+
+5. Confirmed, Deaths, and Recovered
+
+```{r}
+# latest data by country
+data_by_country <- covid %>%
+  select(Country.Region, Confirmed, Deaths, Recovered) %>%
+  group_by(Country.Region) %>%
+  summarise(Confirmed = max(Confirmed), Deaths = max(Deaths), Recovered = max(Recovered)) %>%
+  arrange(desc(Confirmed))
+data_by_country
+
+
+# case fatality rate by country (death/confirmed)
+fatality_rate <- data_by_country %>% 
+  mutate(Fatality.Rate = Deaths/Confirmed) %>%
+  arrange(desc(Fatality.Rate))
+fatality_rate
+```
+
+- Philippines had the highest case fatality rate with 33.3% which the death number was higher compared to the number of confirmed cases. Both US and Australia had case fatality rate of 11.1%.
+
+```{r}
+# recovery rate by country (recovered/confirmed)
+recovery_rate <- data_by_country %>%
+  mutate(Recovery.Rate = Recovered/Confirmed) %>%
+  arrange(desc(Recovery.Rate))
+recovery_rate
+```
+
+- Recovery rate for Vietnam, Cambodia, Nepal, and Sri Lanka were 100%. Everyone who were diagnosed with Corona virus were recovered in the 4 countries. 
+
+6. Total confirmed, deaths, and recovery nation wide
+
+```{r}
+# latest corona virus spread nation wide
+world_data <- data_by_country %>%
+  select(Confirmed, Deaths, Recovered) %>%
+  summarise(Confirmed = sum(Confirmed), Deaths = max(Deaths), Recovered = max(Recovered))
+world_data
+
+# case fatality rate world wide
+w_fatality_rate <- world_data %>% 
+  mutate(Fatality.Rate = Deaths/Confirmed)
+w_fatality_rate
+
+# recovery rate world wide
+w_recovery_rate <- world_data %>% 
+  mutate(Recovery.Rate = Recovered/Confirmed)
+w_recovery_rate
+```
+
+- The fatality rate was 3.63% and the recovery rate was 43.9%. The recovery rate is much more higher than the fatality rate. 
+
+7. Corona virus spread over time
+
+```{r}
+# get the data over time
+over_time_data <- covid %>% 
+  select(Date, Confirmed, Deaths, Recovered) %>%
+  mutate(Date = as_date(mdy(Date))) %>%
+  group_by(Date) %>%
+  summarise(Confirmed = max(Confirmed), Deaths = max(Deaths), Recovered = max(Recovered))
+over_time_data
+
+# graph of confirmed cases over time
+ggplot(over_time_data, aes(x=Date, y=Confirmed)) +
+  geom_line(color="#FFC300") + 
+  ylab("Case Numbers") + ggtitle("Confirmed Cases Increase Over Time")
+
+# graph of deaths over time
+ggplot(over_time_data, aes(x=Date, y=Deaths)) +
+  geom_line(color="#C70039") + 
+  ylab("Case Numbers") + ggtitle("Deaths Increase Over Time")
+
+# graph of recovery over time
+ggplot(over_time_data, aes(x=Date,y=Recovered)) +
+  geom_line(color="#69b3a2") + 
+  ylab("Case Numbers") + ggtitle("Deaths Increase Over Time")
+```
+
+8. Forecasting number of confirmed cases world wide by March 10th
+
+```{r}
+# logistic regression model prediction
+lm <-lm(Confirmed~poly(Date,2),data = over_time_data)
+pred <- data.frame(Date=over_time_data$Date+0:15)
+pred$Confirmed <- predict(lm(Confirmed~poly(Date,2),data = over_time_data), newdata=pred)
+tail(pred)
+
+# plot prediction
+ggplot(over_time_data, aes(x=Date, y=Confirmed)) +
+  geom_line(color="#FFC300") + 
+  ylab("Case Numbers") + ggtitle("Predction of Confirmed Cases 15 days") + 
+  geom_line(data=pred, color="red")
+```
+
+- Using linear regression model, the confirmed cases will be 85959 world wide by March 10th. 
+
+9. Check for model adequacy
+
+```{r}
+# model adequacy
+plot(lm)
+```
+
+The residuals are normally not distributed and the residuals are not random and the variance of the residuals is not constant. The model did not pass the adquacy test and needs to explore other models. 
+
